@@ -59,6 +59,11 @@ function renderbox(ifc, ipv6) {
 	]);
 }
 
+var callUserInfo = rpc.declare({
+    object: 'luci',
+    method: 'getUserInfo'
+});
+
 return baseclass.extend({
 	title: _('Network'),
 
@@ -67,7 +72,8 @@ return baseclass.extend({
 			fs.trimmed('/proc/sys/net/netfilter/nf_conntrack_count'),
 			fs.trimmed('/proc/sys/net/netfilter/nf_conntrack_max'),
 			network.getWANNetworks(),
-			network.getWAN6Networks()
+			network.getWAN6Networks(),
+			L.resolveDefault(callUserInfo(), {})
 		]);
 	},
 
@@ -76,9 +82,11 @@ return baseclass.extend({
 		    ct_max    = +data[1],
 		    wan_nets  = data[2],
 		    wan6_nets = data[3];
+			userinfo = data[4];
 
 		var fields = [
-			_('Active Connections'), ct_max ? ct_count : null
+			_('Active Connections'), ct_max ? ct_count : null,
+			_('Online Users'), userinfo
 		];
 
 		var ctstatus = E('div', { 'class': 'table' });
