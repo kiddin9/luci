@@ -387,13 +387,6 @@ function pkgStatus(pkg, vop, ver, info)
 				}, _('Needs upgrade'));
 			}
 
-			info.errors.push(_('The installed version of package <em>%h</em> is not compatible, require %s while %s is installed.').format(pkg.name, truncateVersion(ver, vop), truncateVersion(pkg.version)));
-
-			return E('span', {
-				'class': 'label warning',
-				'data-tooltip': _('Require version %h %h,\ninstalled %h')
-					.format(vop, ver, pkg.version)
-			}, _('Version incompatible'));
 		}
 
 		return E('span', { 'class': 'label notice' }, _('Installed'));
