@@ -203,6 +203,7 @@ return view.extend({
 			}, this, ev.target))
 			.then(L.bind(function(btn, res) {
 				var keep = E('input', { type: 'checkbox' }),
+				    keep_opkg = E('input', { type: 'checkbox' }),
 				    force = E('input', { type: 'checkbox' }),
 				    is_valid = res[1].valid,
 				    is_forceable = res[1].forceable,
@@ -220,7 +221,10 @@ return view.extend({
 				body.push(E('p', {}, E('label', { 'class': 'btn' }, [
 					keep, ' ', _('Keep settings and retain the current configuration')
 				])));
-
+				body.push(E('p', {}, E('label', { 'class': 'btn' }, [
+					keep_opkg, ' ', _('Retain the current packages')
+				])));
+					keep_opkg.checked = true;
 				if (!is_valid || is_too_big)
 					body.push(E('hr'));
 
@@ -293,6 +297,9 @@ return view.extend({
 
 		if (!keep.checked)
 			opts.push('-n');
+
+		if (keep_opkg.checked)
+			opts.push('-k');
 
 		if (force.checked)
 			opts.push('--force');
