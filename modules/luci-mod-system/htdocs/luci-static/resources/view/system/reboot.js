@@ -31,7 +31,7 @@ return view.extend({
 	},
 
 	handleReboot: function(ev) {
-		return fs.exec('/sbin/reboot').then(function(res) {
+		return fs.exec('reboot').then(function(res) {
 			if (res.code != 0) {
 				L.ui.addNotification(null, E('p', _('The reboot command failed with code %d').format(res.code)));
 				L.raise('Error', 'Reboot failed');
