@@ -15,6 +15,7 @@ case "$action" in
 	;;
 	install|update|remove)
 		(
+		source /etc/profile.d/opkginstall.sh;
 			opkg="opkg"
 
 			while [ -n "$1" ]; do
