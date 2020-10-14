@@ -93,7 +93,7 @@
 			},
 			"ubus": {
 				"file": [ "list", "read" ],
-				"system": [ "board", "info" ]
+				"system": [ "board", "info", "getCPUInfo", "getEthInfo", "getUserInfo" ]
 			}
 		}
 	},
