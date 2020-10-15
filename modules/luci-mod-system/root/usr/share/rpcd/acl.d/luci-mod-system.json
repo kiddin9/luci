@@ -3,7 +3,7 @@
 		"description": "Grant access to system configuration",
 		"read": {
 			"ubus": {
-				"luci": [ "getInitList", "getLEDs", "getLocaltime", "getTimezones", "getUSBDevices" ]
+				"luci": [ "getInitList", "getLEDs", "getLocaltime", "getTimezones", "getUSBDevices", "getCPUInfo", "getEthInfo", "getUserInfo" ]
 			},
 			"uci": [ "luci", "system" ]
 		},
