@@ -1027,7 +1027,7 @@ return view.extend({
 				E('div', {}, [
 					E('label', {}, _('Filter') + ':'),
 					E('span', { 'class': 'control-group' }, [
-						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': query, 'keyup': handleKeyUp }),
+						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': 'luci-app', 'keyup': handleKeyUp }),
 						E('button', { 'class': 'btn cbi-button', 'click': handleReset }, [ _('Clear') ])
 					])
 				]),
