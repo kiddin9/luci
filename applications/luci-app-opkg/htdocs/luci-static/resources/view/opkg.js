@@ -232,7 +232,7 @@ function display(pattern)
 			var avail = packages.available.pkgs[name],
 			    inst  = packages.installed.pkgs[name];
 
-			if (!inst || !inst.installed)
+			if (!inst || !inst.installed || !pkg.name.includes('luci-app') || !pkg.name.includes('v2ray'))
 				continue;
 
 			if (!avail || compareVersion(avail.version, pkg.version) <= 0)
@@ -260,6 +260,9 @@ function display(pattern)
 			}, _('Remove…'));
 		}
 		else {
+			if (pkg.name.includes('kmod'))
+			   continue;
+
 			var inst = packages.installed.pkgs[name];
 
 			ver = truncateVersion(pkg.version || '-');
@@ -356,6 +359,7 @@ function handlePage(ev)
 
 function handleMode(ev)
 {
+	document.querySelector('input[name="filter"]').value = ""
 	var tab = findParent(ev.target, 'li');
 	if (tab.getAttribute('data-mode') === currentDisplayMode)
 		return;
@@ -1012,7 +1016,6 @@ return view.extend({
 
 	render: function(listData) {
 		var query = decodeURIComponent(L.toArray(location.search.match(/\bquery=([^=]+)\b/))[1] || '');
-
 		var view = E([], [
 			E('style', { 'type': 'text/css' }, [ css ]),
 
@@ -1027,7 +1030,7 @@ return view.extend({
 				E('div', {}, [
 					E('label', {}, _('Filter') + ':'),
 					E('span', { 'class': 'control-group' }, [
-						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': query, 'keyup': handleKeyUp }),
+						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': 'luci-app', 'keyup': handleKeyUp }),
 						E('button', { 'class': 'btn cbi-button', 'click': handleReset }, [ _('Clear') ])
 					])
 				]),
