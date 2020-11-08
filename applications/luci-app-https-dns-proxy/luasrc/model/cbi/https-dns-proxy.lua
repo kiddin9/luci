@@ -122,6 +122,11 @@ else
 	buttons.template = packageName .. "/buttons"
 end
 
+s = m:section(TypedSection, "main", "config")
+s.anonymous=true
+o = s:option(Flag, "enabled", translate("Enable"))
+o.default = 1
+
 createHelperText()
 s3 = m:section(TypedSection, "https-dns-proxy", translate("Instances"), 
 	translatef("When you add/remove any instances below, they will be used to override the 'DNS forwardings' section of %sDHCP and DNS%s.", "<a href=\"" .. dispatcher.build_url("admin/network/dhcp") .. "\">", "</a>") .. helperText)
