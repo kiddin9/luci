@@ -163,6 +163,30 @@ return view.extend({
 		s.tab('tftp', _('TFTP Settings'));
 		s.tab('advanced', _('Advanced Settings'));
 		s.tab('leases', _('Static Leases'));
+		s.tab('custom_domain', _('Custom Redirect Domain'));
+
+		o = s.taboption('custom_domain', form.SectionValue, 'domain', form.GridSection, 'domain', null,
+			_('Define a custom domain name and the corresponding PTR record'));
+
+		ss = o.subsection;
+
+		ss.addremove = true;
+		ss.anonymous = true;
+
+		so = ss.option(form.Value, 'name', _('Domain name'));
+		so.datatype = 'hostname';
+		so.rmempty  = true;
+
+		so = ss.option(form.Value, 'ip', _('<abbr title=\"Internet Protocol Version 4\">IPv4</abbr>-Address'));
+		so.datatype = 'or(ip4addr,"ignore")';
+		so.rmempty  = true;
+
+		so = ss.option(form.Value, 'comments', _('Comments'));
+		so.rmempty  = true;
+
+		s.taboption('general', form.Flag, 'dns_redirect',
+			_('DNS Redirect'),
+			_('Redirect client DNS to dnsmasq'));
 
 		s.taboption('general', form.Flag, 'domainneeded',
 			_('Domain required'),
@@ -363,6 +387,14 @@ return view.extend({
 		o.optional = true;
 		o.datatype = 'range(0,10000)';
 		o.placeholder = 150;
+
+
+		o = s.taboption('advanced', form.Value, 'mini_ttl',
+			_('Minimum TTL to send to clients'),
+			_('Modify DNS entries minimum TTL (max is 86400, 0 is no modify)'));
+		o.optional = true;
+		o.datatype = 'range(0,86400)';
+		o.placeholder = 0;
 
 		s.taboption('tftp', form.Flag, 'enable_tftp',
 			_('Enable TFTP server')).optional = true;
