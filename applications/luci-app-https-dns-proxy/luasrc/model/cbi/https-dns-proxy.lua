@@ -118,9 +118,12 @@ else
 			ss.template = packageName .. "/status-textarea"
 		end
 	ss.value = packageStatus
-	buttons = h:option(DummyValue, "_dummy")
-	buttons.template = packageName .. "/buttons"
 end
+
+s = m:section(TypedSection, "main", "config")
+s.anonymous=true
+o = s:option(Flag, "enabled", translate("Enable"))
+o.default = 1
 
 createHelperText()
 s3 = m:section(TypedSection, "https-dns-proxy", translate("Instances"), 
