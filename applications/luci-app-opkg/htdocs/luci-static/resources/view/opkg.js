@@ -232,7 +232,7 @@ function display(pattern)
 			var avail = packages.available.pkgs[name],
 			    inst  = packages.installed.pkgs[name];
 
-			if (!inst || !inst.installed)
+			if (!inst || !inst.installed || (!pkg.name.includes('luci-app') && !pkg.name.includes('luci-theme') && !pkg.name.includes('v2ray')) || pkg.name.includes('luci-app-opkg'))
 				continue;
 
 			if (!avail || compareVersion(avail.version, pkg.version) <= 0)
