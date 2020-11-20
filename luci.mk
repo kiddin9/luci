@@ -187,6 +187,12 @@ define Package/$(PKG_NAME)/install
 	else true; fi
 endef
 
+ifndef Package/$(PKG_NAME)/conffiles
+define Package/$(PKG_NAME)/conffiles
+/etc/config/
+endef
+endif
+
 ifndef Package/$(PKG_NAME)/postinst
 define Package/$(PKG_NAME)/postinst
 [ -n "$${IPKG_INSTROOT}" ] || {$(foreach script,$(LUCI_DEFAULTS),
