@@ -358,7 +358,10 @@ local methods = {
 		call = function(args)
 			local util = require "luci.util"
 
-			local swc, err = io.popen("swconfig dev %s show 2>/dev/null" % util.shellquote(args.switch))
+			local swc, err = io.open("/tmp/SwconfigPortState", "r")
+			if err then
+				local swc, err = io.popen("swconfig dev %s show | tee /tmp/SwconfigPortState" % util.shellquote(args.switch))
+			end
 			if swc then
 				local ports = { }
 
