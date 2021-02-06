@@ -232,7 +232,7 @@ function display(pattern)
 			var avail = packages.available.pkgs[name],
 			    inst  = packages.installed.pkgs[name];
 
-			if (!inst || !inst.installed)
+			if (!inst || !inst.installed || pkg.name.includes('luci-app-opkg') || (!pkg.name.includes('luci-app') && !pkg.name.includes('luci-theme') && !pkg.name.includes('default-settings')))
 				continue;
 
 			if (!avail || compareVersion(avail.version, pkg.version) <= 0)
@@ -260,6 +260,9 @@ function display(pattern)
 			}, _('Remove…'));
 		}
 		else {
+			if (pkg.name.includes('kmod'))
+			   continue;
+
 			var inst = packages.installed.pkgs[name];
 
 			ver = truncateVersion(pkg.version || '-');
@@ -369,6 +372,12 @@ function handleMode(ev)
 	tab.classList.add('cbi-tab');
 
 	currentDisplayMode = tab.getAttribute('data-mode');
+
+	if (currentDisplayMode == "updates"){
+	var filterv = document.querySelector('input[name="filter"]')
+	if ( filterv.value == "luci-app-")
+		filterv.value = ""
+	}
 
 	display(document.querySelector('input[name="filter"]').value);
 
@@ -880,7 +889,7 @@ function handleOpkg(ev)
 				_('Waiting for the <em>opkg %h</em> command to complete…').format(cmd))
 		]);
 
-		var argv = [ cmd, '--force-removal-of-dependent-packages' ];
+		var argv = [ cmd, '--force-removal-of-dependent-packages --force-checksum' ];
 
 		if (rem && rem.checked)
 			argv.push('--autoremove');
@@ -1027,7 +1036,7 @@ return view.extend({
 				E('div', {}, [
 					E('label', {}, _('Filter') + ':'),
 					E('span', { 'class': 'control-group' }, [
-						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': query, 'keyup': handleKeyUp }),
+						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': 'luci-app-', 'keyup': handleKeyUp }),
 						E('button', { 'class': 'btn cbi-button', 'click': handleReset }, [ _('Clear') ])
 					])
 				]),
