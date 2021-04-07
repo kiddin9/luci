@@ -123,6 +123,7 @@ end
 
 			local isempty, section, i, k = true, nil, nil
 		    for i, k in ipairs(self:cfgsections()) do
+		    		if i <= 120 then
 				isempty = false
 				section = k
 
@@ -165,7 +166,11 @@ end
 				</div>
 			<%- end -%>
 		</div>
-		<%- end -%>
+		<%-
+			end
+			i=i+1
+		end
+		-%>
 
 		<%- if isempty then -%>
 		<div class="tr cbi-section-table-row placeholder">
