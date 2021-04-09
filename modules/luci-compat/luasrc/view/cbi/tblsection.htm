@@ -123,6 +123,7 @@ end
 
 			local isempty, section, i, k = true, nil, nil
 		    for i, k in ipairs(self:cfgsections()) do
+		    	if i <= 100 then
 				isempty = false
 				section = k
 
@@ -165,6 +166,8 @@ end
 				</td>
 			<%- end -%>
 		</tr>
+			<%- i=i+1 -%>
+			<%- end -%>
 		<%- end -%>
 
 		<%- if isempty then -%>
