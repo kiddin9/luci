@@ -184,6 +184,16 @@ return view.extend({
 		o.value(8, _('Normal'))
 		o.value(9, _('Warning'))
 
+		s.tab('firmware', _('Firmware Settings'));
+
+		o = s.taboption('firmware', form.Flag, 'autoupgrade_pkg', _('Packages Auto Upgrade'));
+			o.rmempty = false;
+			o.default = o.enabled;
+
+		o = s.taboption('firmware', form.Flag, 'autoupgrade_fm', _('Firmware Auto Upgrade'));
+			o.rmempty = false;
+			o.default = o.enabled;
+
 		/*
 		 * Zram Properties
 		 */
