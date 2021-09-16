@@ -210,7 +210,7 @@ define Package/$(PKG_NAME)/postinst
 	(. /etc/uci-defaults/$(script)) && rm -f /etc/uci-defaults/$(script))
 	rm -f /tmp/luci-indexcache
 	rm -rf /tmp/luci-modulecache/
-	killall -HUP rpcd 2>/dev/null
+	#killall -HUP rpcd 2>/dev/null
 	exit 0
 }
 endef
