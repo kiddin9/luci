@@ -459,8 +459,13 @@ function httpdispatch(request, prefix)
 
 	local r = {}
 	context.request = r
-
-	local pathinfo = http.urldecode(request:getenv("PATH_INFO") or "", true)
+	
+	local pathinfo = ""
+	if sys.call("test -s /tmp/resolv.conf.d/resolv.conf.auto") == 0 then
+		pathinfo = http.urldecode(request:getenv("PATH_INFO") or "", true)	
+	else
+		pathinfo = http.urldecode(request:getenv("PATH_INFO") or "admin/system/initsetup", true)
+	end
 
 	if prefix then
 		for _, node in ipairs(prefix) do
@@ -563,13 +568,15 @@ local function session_setup(user, pass)
 			ubus_rpc_session = login.ubus_rpc_session,
 			values = { token = sys.uniqueid(16) }
 		})
-		nixio.syslog("info", tostring("luci: accepted login on /%s for %s from %s\n"
-			%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" }))
+
+		io.stderr:write("luci: accepted login on /%s for %s from %s\n"
+			%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" })
 
 		return session_retrieve(login.ubus_rpc_session)
 	end
-	nixio.syslog("info", tostring("luci: failed login on /%s for %s from %s\n"
-		%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" }))
+
+	io.stderr:write("luci: failed login on /%s for %s from %s\n"
+		%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" })
 end
 
 local function check_authentication(method)
@@ -914,8 +921,15 @@ function dispatch(request)
 	if #required_path_acls > 0 then
 		local perm = check_acl_depends(required_path_acls, ctx.authacl and ctx.authacl["access-group"])
 		if perm == nil then
-			http.status(403, "Forbidden")
-			return
+			local utl = require "luci.util"
+			local sid = context.authsession
+			if sid then
+				utl.ubus("session", "destroy", { ubus_rpc_session = sid })
+				luci.http.header("Set-Cookie", "sysauth=%s; expires=%s; path=%s" %{
+					'', 'Thu, 01 Jan 1970 01:00:00 GMT', build_url()
+				})
+			end
+			luci.http.redirect(build_url())
 		end
 
 		if page then
