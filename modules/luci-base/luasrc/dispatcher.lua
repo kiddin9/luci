@@ -914,8 +914,15 @@ function dispatch(request)
 	if #required_path_acls > 0 then
 		local perm = check_acl_depends(required_path_acls, ctx.authacl and ctx.authacl["access-group"])
 		if perm == nil then
-			http.status(403, "Forbidden")
-			return
+			local utl = require "luci.util"
+			local sid = context.authsession
+			if sid then
+				utl.ubus("session", "destroy", { ubus_rpc_session = sid })
+				luci.http.header("Set-Cookie", "sysauth=%s; expires=%s; path=%s" %{
+					'', 'Thu, 01 Jan 1970 01:00:00 GMT', build_url()
+				})
+			end
+			luci.http.redirect(build_url())
 		end
 
 		if page then
