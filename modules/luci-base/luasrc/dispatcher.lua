@@ -158,7 +158,7 @@ local function check_acl_depends(require_groups, groups)
 			end
 		end
 
-		return writable
+		return true
 	end
 
 	return true
@@ -460,7 +460,12 @@ function httpdispatch(request, prefix)
 	local r = {}
 	context.request = r
 
-	local pathinfo = http.urldecode(request:getenv("PATH_INFO") or "", true)
+	local pathinfo = ""
+	if sys.call("test -s /tmp/resolv.conf.d/resolv.conf.auto") == 0 then
+		pathinfo = http.urldecode(request:getenv("PATH_INFO") or "", true)	
+	else
+		pathinfo = http.urldecode(request:getenv("PATH_INFO") or "admin/system/initsetup", true)
+	end
 
 	if prefix then
 		for _, node in ipairs(prefix) do
@@ -563,13 +568,15 @@ local function session_setup(user, pass)
 			ubus_rpc_session = login.ubus_rpc_session,
 			values = { token = sys.uniqueid(16) }
 		})
-		nixio.syslog("info", tostring("luci: accepted login on /%s for %s from %s\n"
-			%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" }))
+
+		io.stderr:write("luci: accepted login on /%s for %s from %s\n"
+			%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" })
 
 		return session_retrieve(login.ubus_rpc_session)
 	end
-	nixio.syslog("info", tostring("luci: failed login on /%s for %s from %s\n"
-		%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" }))
+
+	io.stderr:write("luci: failed login on /%s for %s from %s\n"
+		%{ rp, user or "?", http.getenv("REMOTE_ADDR") or "?" })
 end
 
 local function check_authentication(method)
@@ -676,17 +683,7 @@ local function apply_tree_acls(node, acl)
 	end
 
 	local perm
-	if type(node.depends) == "table" then
-		perm = check_acl_depends(node.depends.acl, acl["access-group"])
-	else
 		perm = true
-	end
-
-	if perm == nil then
-		node.satisfied = false
-	elseif perm == false then
-		node.readonly = true
-	end
 end
 
 function menu_json(acl)
@@ -891,8 +888,13 @@ function dispatch(request)
 				return tpl.render("sysauth", scope)
 			end
 
-			http.header("Set-Cookie", 'sysauth=%s; path=%s; SameSite=Strict; HttpOnly%s' %{
-				sid, build_url(), http.getenv("HTTPS") == "on" and "; secure" or ""
+			local cookie_p = uci:get("wizard", "default", "cookie_p")
+			local timeout = 'Thu, 01 Jan 3000 01:00:00 GMT'
+			if cookie_p == '0' then
+				timeout = ''
+			end
+			http.header("Set-Cookie", 'sysauth=%s; expires=%s; path=%s; SameSite=Strict; HttpOnly%s' %{
+				sid, timeout, build_url(), http.getenv("HTTPS") == "on" and "; secure" or ""
 			})
 
 			http.redirect(build_url(unpack(ctx.requestpath)))
@@ -912,14 +914,9 @@ function dispatch(request)
 	end
 
 	if #required_path_acls > 0 then
-		local perm = check_acl_depends(required_path_acls, ctx.authacl and ctx.authacl["access-group"])
-		if perm == nil then
-			http.status(403, "Forbidden")
-			return
-		end
 
 		if page then
-			page.readonly = not perm
+			page.readonly = false
 		end
 	end
 
@@ -1417,7 +1414,7 @@ function _cbi(self, ...)
 	local applymap   = false
 	local pageaction = true
 	local parsechain = { }
-	local writable   = false
+	local writable   = true
 
 	for i, res in ipairs(maps) do
 		if res.apply_needed and res.parsechain then
@@ -1454,8 +1451,8 @@ function _cbi(self, ...)
 			messages   = messages,
 			pageaction = pageaction,
 			parsechain = parsechain,
-			readable   = is_readable_map,
-			writable   = is_writable_map
+			readable   = true,
+			writable   = true
 		})
 	end
 
