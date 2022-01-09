@@ -69,6 +69,8 @@ return view.extend({
 			p[i].value('ACCEPT', _('accept'));
 		}
 
+		o = s.option(form.Flag, 'fullcone', _('FullCone NAT'));
+		
 		/* Netfilter flow offload support */
 
 		if (L.hasSystemFeature('offloading')) {
