@@ -7,6 +7,7 @@
 'require poll';
 'require request';
 'require dom';
+'require fs';
 
 var callPackagelist = rpc.declare({
 	object: 'rpc-sys',
@@ -122,6 +123,7 @@ function request_sysupgrade(server_url, data) {
 			target: data.target,
 			version: data.version,
 			packages: data.packages,
+			partsize: data.partsize,
 			diff_packages: true,
 		});
 	}
@@ -133,6 +135,9 @@ function request_sysupgrade(server_url, data) {
 			var image;
 			for (image of res.images) {
 	if (image.type == 'sysupgrade') {
+		break;
+	}
+	if (image.type == 'combined-efi' && fs.read("/sys/firmware/efi")){
 		break;
 	}
 			}
@@ -269,9 +274,9 @@ function request_sysupgrade(server_url, data) {
 	});
 }
 
-async function check_sysupgrade(server_url, system_board, packages) {
+async function check_sysupgrade(server_url, system_board, packages, force) {
 	var {board_name} = system_board;
-	var {target, version, revision} = system_board.release;
+	var {target, version, revision, distribution} = system_board.release;
 	var current_branch = get_branch(version);
 	var advanced_mode =
 			uci.get_first('attendedsysupgrade', 'client', 'advanced_mode') || 0;
@@ -282,7 +287,6 @@ async function check_sysupgrade(server_url, system_board, packages) {
 		E('p', _('Searching for an available sysupgrade of %s - %s')
 				 .format(version, revision)));
 
-	if (version.endsWith('SNAPSHOT')) {
 		response =
 	await request.get(`${server_url}/api/v1/revision/${version}/${target}`);
 		if (!response.ok) {
@@ -291,43 +295,9 @@ async function check_sysupgrade(server_url, system_board, packages) {
 		}
 
 		const remote_revision = response.json().revision;
-
-		if (get_revision_count(revision) < get_revision_count(remote_revision)) {
+		if (revision < remote_revision || force) {
 			candidates.push(version);
 		}
-	} else {
-		response = await request.get(`${server_url}/api/overview`, {
-			timeout: 8000,
-		});
-
-		if (!response.ok) {
-			error_api_connect(response);
-			return;
-		}
-
-		const latest = response.json().latest;
-
-		for (let remote_version of latest) {
-			var remote_branch = get_branch(remote_version);
-
-			// already latest version installed
-			if (version == remote_version) {
-	break;
-			}
-
-			// skip branch upgrades outside the advanced mode
-			if (current_branch != remote_branch && advanced_mode == 0) {
-	continue;
-			}
-
-			candidates.unshift(remote_version);
-
-			// don't offer branches older than the current
-			if (current_branch == remote_branch) {
-	break;
-			}
-		}
-	}
 
 	if (candidates.length) {
 		var m, s, o;
@@ -338,6 +308,7 @@ async function check_sysupgrade(server_url, system_board, packages) {
 	target: target,
 	version: candidates[0],
 	packages: Object.keys(packages).sort(),
+	partsize: distribution,
 			},
 		};
 
@@ -394,6 +365,12 @@ async function check_sysupgrade(server_url, system_board, packages) {
 			click: ui.hideModal,
 		},
 			_('Close')),
+		' ',
+		E('div', {
+				class: 'btn cbi-button-action',
+				click: function() { check_sysupgrade(server_url, system_board, packages, 1); },
+			},
+				_('Force Sysupgrade')),
 	]),
 		]);
 	}
