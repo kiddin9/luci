@@ -368,6 +368,11 @@ return view.extend({
 		o.optional = true;
 		o.placeholder = '/etc/dnsmasq.hosts';
 
+		o = s.taboption('advanced', form.Flag, 'filter_aaaa',
+			_('Disable IPv6 DNS forwards'),
+			_('Filter IPv6(AAAA) DNS Query Name Resolve'));
+		o.optional = true;
+		
 		o = s.taboption('advanced', form.Flag, 'quietdhcp',
 			_('Suppress logging'),
 			_('Suppress logging of the routine operation for the DHCP protocol.'));
@@ -475,6 +480,13 @@ return view.extend({
 		o.datatype = 'range(0,10000)';
 		o.placeholder = 150;
 
+		o = s.taboption('advanced', form.Value, 'mini_ttl',
+			_('Minimum TTL to send to clients'),
+			_('Modify DNS entries minimum TTL (max is 86400, 0 is no modify)'));
+		o.optional = true;
+		o.datatype = 'range(0,86400)';
+		o.placeholder = 0;
+		
 		o = s.taboption('pxe_tftp', form.Flag, 'enable_tftp',
 			_('Enable TFTP server'),
 			_('Enable the built-in single-instance TFTP server.'));
