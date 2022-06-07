@@ -2,6 +2,7 @@
 'require view';
 'require rpc';
 'require uci';
+'require fs';
 'require form';
 'require network';
 'require firewall';
@@ -67,6 +68,10 @@ return view.extend({
 			p[i].value('REJECT', _('reject'));
 			p[i].value('DROP', _('drop'));
 			p[i].value('ACCEPT', _('accept'));
+		}
+
+		if (L.hasSystemFeature('fullconenat')) {
+		o = s.option(form.Flag, 'fullcone', _('FullCone NAT'), _('Using FullCone NAT can improve gaming performance effectively'));
 		}
 
 		/* Netfilter flow offload support */
