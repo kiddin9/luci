@@ -206,9 +206,14 @@ define Package/$(PKG_NAME)/install
 	  $(call Build/Install/Default) \
 	  $(CP) $(PKG_INSTALL_DIR)/* $(1)/; \
 	else true; fi
+	$(INSTALL_DIR) $(1)$(LUCI_LIBRARYDIR)/i18n
+	$(foreach po,$(wildcard ${CURDIR}/po/zh_Hans/*.po), \
+		po2lmo $(po) \
+		$(1)$(LUCI_LIBRARYDIR)/i18n/$(basename $(notdir $(po))).zh-cn.lmo;)
 endef
 
 ifndef Package/$(PKG_NAME)/postinst
+ifneq ($(wildcard ${CURDIR}/htdocs/luci-static/resources/view),)
 define Package/$(PKG_NAME)/postinst
 [ -n "$${IPKG_INSTROOT}" ] || { \
 	rm -f /tmp/luci-indexcache
@@ -217,7 +222,18 @@ define Package/$(PKG_NAME)/postinst
 	exit 0
 }
 endef
+else
+define Package/$(PKG_NAME)/postinst
+[ -n "$${IPKG_INSTROOT}" ] || {$(foreach script,$(LUCI_DEFAULTS),
+	(. /etc/uci-defaults/$(script)) && rm -f /etc/uci-defaults/$(script))
+	rm -f /tmp/luci-indexcache
+	rm -rf /tmp/luci-modulecache/
+	exit 0
+}
+endef
 endif
+endif
+
 
 # some generic macros that can be used by all packages
 ifeq ($(LUCI_MINIFY_JS),1)
@@ -333,5 +349,4 @@ define LuciTranslation
 
 endef
 
-$(foreach lang,$(LUCI_LANGUAGES),$(eval $(call LuciTranslation,$(firstword $(LUCI_LC_ALIAS.$(lang)) $(lang)),$(lang))))
 $(foreach pkg,$(LUCI_BUILD_PACKAGES),$(eval $(call BuildPackage,$(pkg))))
