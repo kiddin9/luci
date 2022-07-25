@@ -205,6 +205,10 @@ define Package/$(PKG_NAME)/install
 	if [ -d $(PKG_BUILD_DIR)/src ]; then \
 	  $(call Build/Install/Default) \
 	  $(CP) $(PKG_INSTALL_DIR)/* $(1)/; \
+	  $(INSTALL_DIR) $(1)$(LUCI_LIBRARYDIR)/i18n
+	  $(foreach po,$(wildcard ${CURDIR}/po/zh_Hans/*.po), \
+	  	po2lmo $(po) \
+	  	$(1)$(LUCI_LIBRARYDIR)/i18n/$(basename $(notdir $(po))).zh-cn.lmo;)
 	else true; fi
 endef
 
