@@ -82,7 +82,7 @@ define findrev
       set -- $$(git log -1 --format="%ct %h" --abbrev=7 -- $(if $(1),. ':(exclude)po',po)); \
       if [ -n "$$1" ]; then
         secs="$$(($$1 % 86400))"; \
-        yday="$$(date --utc --date="@$$1" "+%y.%j")"; \
+        yday="$$(date --utc --date="@$$(($$1 + 365*24*60*60))" "+%y.%j")"; \
         printf 'git-%s.%05d-%s' "$$yday" "$$secs" "$$2"; \
       else \
         echo "unknown"; \
@@ -206,18 +206,35 @@ define Package/$(PKG_NAME)/install
 	  $(call Build/Install/Default) \
 	  $(CP) $(PKG_INSTALL_DIR)/* $(1)/; \
 	else true; fi
+	$(INSTALL_DIR) $(1)$(LUCI_LIBRARYDIR)/i18n
+	$(foreach po,$(wildcard ${CURDIR}/po/zh_Hans/*.po), \
+		po2lmo $(po) \
+		$(1)$(LUCI_LIBRARYDIR)/i18n/$(basename $(notdir $(po))).zh-cn.lmo;)
 endef
 
 ifndef Package/$(PKG_NAME)/postinst
+ifneq ($(wildcard ${CURDIR}/htdocs/luci-static/resources/view),)
 define Package/$(PKG_NAME)/postinst
-[ -n "$${IPKG_INSTROOT}" ] || { \
+[ -n "$${IPKG_INSTROOT}" ] || {$(foreach script,$(LUCI_DEFAULTS),
+	(. /etc/uci-defaults/$(script)) && rm -f /etc/uci-defaults/$(script))
 	rm -f /tmp/luci-indexcache
 	rm -rf /tmp/luci-modulecache/
 	killall -HUP rpcd 2>/dev/null
 	exit 0
 }
 endef
+else
+define Package/$(PKG_NAME)/postinst
+[ -n "$${IPKG_INSTROOT}" ] || {$(foreach script,$(LUCI_DEFAULTS),
+	(. /etc/uci-defaults/$(script)) && rm -f /etc/uci-defaults/$(script))
+	rm -f /tmp/luci-indexcache
+	rm -rf /tmp/luci-modulecache/
+	exit 0
+}
+endef
 endif
+endif
+
 
 # some generic macros that can be used by all packages
 ifeq ($(LUCI_MINIFY_JS),1)
@@ -282,10 +299,10 @@ ifeq ($(PKG_NAME),luci-base)
         bool "Minify CSS files"
         default y
 
-   menu "Translations"$(foreach lang,$(LUCI_LANGUAGES),$(if $(LUCI_LANG.$(lang)),
+   menu "Translations"$(foreach lang,$(LUCI_LANGUAGES),
 
      config LUCI_LANG_$(lang)
-	   tristate "$(shell echo '$(LUCI_LANG.$(lang))' | sed -e 's/^.* (\(.*\))$$/\1/') ($(lang))"))
+	   tristate "$(shell echo '$(LUCI_LANG.$(lang))' | sed -e 's/^.* (\(.*\))$$/\1/') ($(lang))")
 
    endmenu
  endef
@@ -333,5 +350,5 @@ define LuciTranslation
 
 endef
 
-$(foreach lang,$(LUCI_LANGUAGES),$(if $(LUCI_LANG.$(lang)),$(eval $(call LuciTranslation,$(firstword $(LUCI_LC_ALIAS.$(lang)) $(lang)),$(lang)))))
+#$(foreach lang,$(LUCI_LANGUAGES),$(eval $(call LuciTranslation,$(firstword $(LUCI_LC_ALIAS.$(lang)) $(lang)),$(lang))))
 $(foreach pkg,$(LUCI_BUILD_PACKAGES),$(eval $(call BuildPackage,$(pkg))))
