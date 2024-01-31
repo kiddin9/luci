@@ -337,6 +337,10 @@ return view.extend({
 		s.tab('mxhosts', _('MX'));
 		s.tab('cnamehosts', _('CNAME'));
 		s.tab('pxe_tftp', _('PXE/TFTP'));
+		s.tab('custom_domain', _('Custom Redirect Domain'));
+
+		o = s.taboption('custom_domain', form.SectionValue, 'domain', form.GridSection, 'domain', null,
+			_('Define a custom domain name and the corresponding PTR record'));
 
 		s.taboption('filteropts', form.Flag, 'domainneeded',
 			_('Domain required'),
