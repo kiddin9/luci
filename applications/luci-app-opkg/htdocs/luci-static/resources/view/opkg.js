@@ -886,7 +886,7 @@ function handleConfig(ev)
 			}, '%h'.format(conf[file])));
 		});
 
-		body.push(E('div', { 'class': 'right' }, [
+		body.push(E('div', { 'class': 'button-row' }, [
 			E('div', {
 				'class': 'btn cbi-button-neutral',
 				'click': ui.hideModal
@@ -1012,7 +1012,7 @@ function handleOpkg(ev)
 			if (res.code !== 0)
 				dlg.appendChild(E('p', _('The <em>opkg %h</em> command failed with code <code>%d</code>.').format(cmd, (res.code & 0xff) || -1)));
 
-			dlg.appendChild(E('div', { 'class': 'right' },
+			dlg.appendChild(E('div', { 'class': 'button-row' },
 				E('div', {
 					'class': 'btn',
 					'click': L.bind(function(res) {
@@ -1122,12 +1122,34 @@ return view.extend({
 	},
 
 	render: function(listData) {
+		var checkUpdateNeeded = function() {
+            return fs.stat('/tmp/opkg-lists').then(function(stat) {
+                if (!stat) return true; // 如果文件夹不存在，需要更新
+
+                var currentTime = Math.floor(Date.now() / 1000);
+                var lastUpdateTime = stat.mtime;
+                var timeDifference = currentTime - lastUpdateTime;
+
+                return timeDifference > 3600; // 如果超过1小时，需要更新
+            }).catch(function() {
+                return true; // 如果出错，也认为需要更新
+            });
+        };
+
 		var query = decodeURIComponent(L.toArray(location.search.match(/\bquery=([^=]+)\b/))[1] || '');
 
 		var view = E([], [
 			E('style', { 'type': 'text/css' }, [ css ]),
 
 			E('h2', {}, _('Software')),
+
+			E('div', { 'class': 'cbi-map-descr' }, [
+				E('span', _('Install additional software and upgrade existing packages with opkg.')),
+				E('br'),
+				E('span', _('<strong>Warning!</strong> Package operations can <a %s>break your system</a>.').format(
+					'href="https://openwrt.org/meta/infobox/upgrade_packages_warning" target="_blank" rel="noreferrer"'
+				))
+			]),
 
 			E('div', { 'class': 'controls' }, [
 				E('div', {}, [
@@ -1240,7 +1262,17 @@ return view.extend({
 		]);
 
 		requestAnimationFrame(function() {
-			updateLists(listData)
+			updateLists(listData);
+            checkUpdateNeeded().then(function(needUpdate) {
+                if (needUpdate) {
+					setTimeout(function() {
+                    var updateButton = document.querySelector('button[data-command="update"]');
+                    if (updateButton) {
+                        updateButton.click();
+                    }
+					}, 10)
+                }
+            });
 		});
 
 		return view;
