@@ -111,7 +111,7 @@ return view.extend({
 
 		if (image.name != undefined) {
 			this.data.sha256_unsigned = image.sha256_unsigned;
-			let sysupgrade_url = `${this.data.url}/store/${response.bin_dir}/${image.name}`;
+			let sysupgrade_url = `${this.data.url}/store/${response.request_hash}/${image.name}`;
 
 			let keep = E('input', { type: 'checkbox' });
 			keep.checked = true;
@@ -393,7 +393,7 @@ return view.extend({
 								if (keep) {
 									ui.awaitReconnect(window.location.host);
 								} else {
-									ui.awaitReconnect('192.168.1.1', 'openwrt.lan');
+									ui.awaitReconnect('10.0.0.1', 'kwrt.lan');
 								}
 							});
 						}
@@ -401,14 +401,11 @@ return view.extend({
 			});
 	},
 
-	handleCheck: function () {
+	handleCheck: function (force) {
 		let { url, revision } = this.data;
 		let { version, target } = this.firmware;
 		let candidates = [];
-		let request_url = `${url}/api/overview`;
-		if (version.endsWith('SNAPSHOT')) {
-			request_url = `${url}/api/v1/revision/${version}/${target}`;
-		}
+		let request_url = `${url}/api/v1/revision/${version}/${target}`;
 
 		ui.showModal(_('Searching...'), [
 			E(
@@ -438,40 +435,12 @@ return view.extend({
 				]);
 				return;
 			}
-			if (version.endsWith('SNAPSHOT')) {
 				const remote_revision = response.json().revision;
 				if (
-					get_revision_count(revision) < get_revision_count(remote_revision)
+					revision < remote_revision || force == 1
 				) {
 					candidates.push([version, remote_revision]);
 				}
-			} else {
-				const latest = response.json().latest;
-
-				for (let remote_version of latest) {
-					let remote_branch = get_branch(remote_version);
-
-					// already latest version installed
-					if (version == remote_version) {
-						break;
-					}
-
-					// skip branch upgrades outside the advanced mode
-					if (
-						this.data.branch != remote_branch &&
-						this.data.advanced_mode == 0
-					) {
-						continue;
-					}
-
-					candidates.unshift([remote_version, null]);
-
-					// don't offer branches older than the current
-					if (this.data.branch == remote_branch) {
-						break;
-					}
-				}
-			}
 
 			// allow to re-install running firmware in advanced mode
 			if (this.data.advanced_mode == 1) {
@@ -485,7 +454,7 @@ return view.extend({
 					request: {
 						profile: this.firmware.profile,
 						version: candidates[0][0],
-						packages: Object.keys(this.firmware.packages).sort(),
+						packages: Object.keys(this.firmware.packages).filter((value) => value.search("-zh-cn") == -1).sort(),
 					},
 				};
 
@@ -568,6 +537,9 @@ return view.extend({
 					),
 					E('div', { class: 'right' }, [
 						E('div', { class: 'btn', click: ui.hideModal }, _('Close')),
+					E('div', { class: 'btn cbi-button cbi-button-positive', click: ui.createHandlerFn(this, function () {
+											this.handleCheck(1)
+										}) }, _('Force Sysupgrade')),
 					]),
 				]);
 			}
@@ -596,6 +568,12 @@ return view.extend({
 		this.data.revision = response[1].release.revision;
 
 		this.data.efi = response[2];
+		this.firmware.rootfs_size_mb = Number(response[1].release.distribution);
+		if (this.data.efi) {
+			this.firmware.efi = "efi";
+		} else {
+			this.firmware.efi = "not";
+		}
 
 		this.data.url = uci.get_first('attendedsysupgrade', 'server', 'url');
 		this.data.advanced_mode =
@@ -627,6 +605,16 @@ return view.extend({
 					this.data.revision
 				)
 			),
+			E('p', [_('更多个性化定制请使用网页版: '),E('a', {
+				'class': '',
+				'href': 'https://openwrt.ai',
+				'target': '_balank',
+			}, _('在线定制网页版'))]),
+			E('p', [_('非定制固件请在此更新: '),E('a', {
+				'class': '',
+				'href': '/cgi-bin/luci/admin/services/gpsysupgrade',
+				'target': '_balank',
+			}, _('系统在线更新')),E('br')]),
 			E(
 				'button',
 				{
