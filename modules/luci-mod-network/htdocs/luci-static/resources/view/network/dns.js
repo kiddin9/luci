@@ -253,6 +253,11 @@ return view.extend({
 		o.optional = true;
 		o.placeholder = '/example.org/ipset,ipset6';
 
+		o = s.taboption('general', form.Flag, 'dns_redirect',
+			_('DNS Redirect'),
+			_('Force redirect all local DNS queries to DNSMasq, a.k.a. DNS Hijacking.'));
+		o.optional = true;
+
 		o = s.taboption('general', form.Flag, 'allservers',
 			_('All servers'),
 			_('Query all available upstream resolvers.') + ' ' + _('First answer wins.'));
