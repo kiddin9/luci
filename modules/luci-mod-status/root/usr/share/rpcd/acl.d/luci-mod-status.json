@@ -6,7 +6,7 @@
 				"/etc/services": [ "read" ]
 			},
 			"ubus": {
-				"luci": [ "getConntrackList", "getRealtimeStats" ],
+				"luci": [ "getConntrackList", "getRealtimeStats", "getCPUBench", "getCPUUsage", "getOnlineUsers" ],
 				"luci-rpc": [ "getHostHints", "getNetworkDevices", "getDHCPLeases" ],
 				"network.rrdns": [ "lookup" ]
 			}
