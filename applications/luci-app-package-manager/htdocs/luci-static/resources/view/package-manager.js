@@ -1152,6 +1152,36 @@ return view.extend({
 	},
 
 	render(listData) {
+			const checkUpdateNeeded = function() {
+            return Promise.all([
+                L.resolveDefault(fs.stat('/tmp/opkg-lists'), null),
+                L.resolveDefault(fs.read('/tmp/resolv.conf.d/resolv.conf.auto'), '')
+            ]).then(function(results) {
+                const stat = results[0];
+                const resolvContent = results[1];
+
+                let needUpdate = false;
+
+                if (stat) {
+                    const currentDate = new Date();
+                    const lastUpdateDate = new Date(stat.mtime * 1000);  // Convert seconds to milliseconds
+                    // 检查是否在今天的零点之后更新过
+                    const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                    needUpdate = lastUpdateDate < today;
+                } else {
+                    needUpdate = true;
+                }
+
+                // 检查 resolv.conf.auto 文件内容
+                const hasResolvContent = resolvContent && resolvContent.trim().length > 0;
+
+                // 只有当需要更新且 resolv.conf.auto 不为空时，才返回 true
+                return needUpdate && hasResolvContent;
+            }).catch(function(error) {
+                console.error('Error checking update status:', error);
+                return false; // 如果出错，不执行更新
+            });
+        };
 		const query = decodeURIComponent(L.toArray(location.search.match(/\bquery=([^=]+)\b/))[1] || '');
 
 		const view = E([], [
